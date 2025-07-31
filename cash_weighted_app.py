@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib import font_manager as fm
 
 # 日本語フォント設定
-plt.rcParams['font.family'] = 'IPAexGothic'  # Streamlit Cloud/Linux対応用
+plt.rcParams['font.family'] = 'Noto Sans CJK JP'  # Streamlit Cloud/Linux対応用
 
 import streamlit as st
 import pandas as pd
