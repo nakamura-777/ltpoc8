@@ -16,9 +16,11 @@ monthly_data = {}
 for month in months:
     st.markdown(f"### 📦 {month}")
     with st.expander(f"{month} の製品データ入力"):
+        # 初期行を1行追加
         df = st.data_editor(
-            pd.DataFrame(columns=["製品名", "TP（万円）", "LT（日）"]),
-            key=month
+            pd.DataFrame([{"製品名": "", "TP（万円）": 0.0, "LT（日）": 1}], columns=["製品名", "TP（万円）", "LT（日）"]),
+            key=month,
+            num_rows="dynamic"
         )
         cash_start = st.number_input(f"{month}の期首現金残高（万円）", key=f"{month}_start", value=0.0)
         cash_end = st.number_input(f"{month}の期末現金残高（万円）", key=f"{month}_end", value=0.0)
@@ -46,7 +48,7 @@ if results:
 
     st.markdown("## 2. 結果グラフ：加重平均キャッシュ生産性 vs 現金増減額")
     fig, ax = plt.subplots()
-    ax.scatter(result_df["加重平均TP/LT"], result_df["現金増減額（万円）"])
+    ax.scatter(result_df["加重平均TP/LT"], result_df["現金増減額（万円）"], color='blue')
 
     for i, row in result_df.iterrows():
         ax.annotate(row["月"], (row["加重平均TP/LT"], row["現金増減額（万円）"]),
