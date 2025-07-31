@@ -98,3 +98,34 @@ if results:
 
     csv = result_df.to_csv(index=False).encode("utf-8-sig")
     st.download_button("CSVをダウンロード", csv, "cash_summary.csv", "text/csv")
+
+
+# --- 感度分析: TP/LT改善シナリオ ---
+st.markdown("## 5. 感度分析：TP/LT改善シナリオによる収支改善効果")
+
+if total_months > 0 and avg_monthly_cash_diff < 0:
+    scenarios = {
+        "現状維持 (0%)": 0.00,
+        "軽度改善 (+10%)": 0.10,
+        "中度改善 (+20%)": 0.20,
+        "高度改善 (+30%)": 0.30,
+    }
+
+    base_tp_lt = result_df["加重平均TP/LT"].mean()
+    fig3, ax3 = plt.subplots()
+    future_months = list(range(1, 13))
+
+    for label, improve_rate in scenarios.items():
+        improved_tp_lt = base_tp_lt * (1 + improve_rate)
+        # 仮定: TP/LT が改善すると現金収支も比例して改善
+        adjusted_cash_diff = avg_monthly_cash_diff * (1 + improve_rate)
+        future_cash = [latest_cash + adjusted_cash_diff * m for m in future_months]
+        ax3.plot(future_months, future_cash, marker='o', label=label)
+
+    ax3.axhline(0, color='black', linestyle='--')
+    ax3.set_title("TP/LT改善シナリオ別：将来の現金残高予測")
+    ax3.set_xlabel("現在からの月数")
+    ax3.set_ylabel("予測現金残高（万円）")
+    ax3.legend()
+    ax3.grid(True)
+    st.pyplot(fig3)
