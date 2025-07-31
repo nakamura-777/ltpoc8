@@ -61,9 +61,9 @@ if results:
     for i, row in result_df.iterrows():
         ax.annotate(row["月"], (row["加重平均TP/LT"], row["現金増減額（万円）"]),
                     textcoords="offset points", xytext=(5, 5), ha='left')
-    ax.set_xlabel("加重平均キャッシュ生産性（万円／日）")
-    ax.set_ylabel("現金増減額（万円）")
-    ax.set_title("月別：加重平均TP/LT vs 現金増減額")
+    ax.set_xlabel("加重平均キャッシュ生産性")
+    ax.set_ylabel("現金増減額")
+    ax.set_title("月別：加重平均キャッシュ生産性と現金増減額の関係")
     ax.grid(True)
     st.pyplot(fig)
 
