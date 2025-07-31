@@ -2,14 +2,15 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
+import math
 
-st.title("加重平均キャッシュ生産性 vs 現金増減アプリ")
+st.title("キャッシュ生産性 × 現金増減 × 資金ショート予測アプリ")
 
 st.markdown("## 1. 月ごとの製品データ入力")
 
 months = st.multiselect("分析対象の月（例: 2024-01）を選択", options=[
-    "2024-01", "2024-02", "2024-03", "2024-04", "2024-05"
-], default=["2024-01", "2024-02"])
+    "2024-01", "2024-02", "2024-03", "2024-04", "2024-05", "2024-06", "2024-07", "2024-08"
+], default=["2024-01", "2024-02", "2024-03"])
 
 monthly_data = {}
 
@@ -28,6 +29,7 @@ for month in months:
 
 # 計算・集計
 results = []
+monthly_cash_diff = []
 
 for month, data in monthly_data.items():
     df = data["df"].dropna()
@@ -41,27 +43,57 @@ for month, data in monthly_data.items():
         "加重平均TP/LT": weighted_tp_lt,
         "現金増減額（万円）": cash_diff
     })
+    monthly_cash_diff.append(cash_diff)
 
-# グラフ出力
+# グラフ出力とショート予測
 if results:
     result_df = pd.DataFrame(results)
 
-    st.markdown("## 2. 結果グラフ：加重平均キャッシュ生産性 vs 現金増減額")
+    st.markdown("## 2. グラフ：加重平均キャッシュ生産性 vs 現金増減額")
     fig, ax = plt.subplots()
     ax.scatter(result_df["加重平均TP/LT"], result_df["現金増減額（万円）"], color='blue')
-
     for i, row in result_df.iterrows():
         ax.annotate(row["月"], (row["加重平均TP/LT"], row["現金増減額（万円）"]),
                     textcoords="offset points", xytext=(5, 5), ha='left')
-
     ax.set_xlabel("加重平均キャッシュ生産性（万円／日）")
     ax.set_ylabel("現金増減額（万円）")
     ax.set_title("月別：加重平均TP/LT vs 現金増減額")
     ax.grid(True)
     st.pyplot(fig)
 
+    # 資金ショート時期の予測
+    st.markdown("## 3. 資金ショート時期予測")
+
+    try:
+        total_months = len(results)
+        total_cash_diff = sum(monthly_cash_diff)
+        avg_monthly_cash_diff = total_cash_diff / total_months if total_months > 0 else 0
+        latest_cash = list(monthly_data.values())[-1]["end"]
+
+        if avg_monthly_cash_diff < 0:
+            months_until_short = latest_cash / abs(avg_monthly_cash_diff)
+            future_months = [i+1 for i in range(12)]
+            future_cash = [latest_cash + avg_monthly_cash_diff * m for m in future_months]
+
+            st.write(f"📉 現在の期末現金残高: {latest_cash:.1f}万円")
+            st.write(f"📉 平均月間現金減少: {avg_monthly_cash_diff:.1f}万円")
+            st.write(f"🚨 資金ショート予測: 約 {months_until_short:.1f} ヶ月後")
+
+            fig2, ax2 = plt.subplots()
+            ax2.plot(future_months, future_cash, marker='o', linestyle='-')
+            ax2.axhline(0, color='red', linestyle='--')
+            ax2.set_title("将来の現金残高予測")
+            ax2.set_xlabel("現在からの月数")
+            ax2.set_ylabel("予測現金残高（万円）")
+            ax2.grid(True)
+            st.pyplot(fig2)
+        else:
+            st.success("現在は資金ショートの兆候は見られません。")
+    except Exception as e:
+        st.error("資金ショート予測でエラーが発生しました。")
+
     # 結果の表とCSVダウンロード
-    st.markdown("### 3. 結果表")
+    st.markdown("## 4. 結果表")
     st.dataframe(result_df)
 
     csv = result_df.to_csv(index=False).encode("utf-8-sig")
